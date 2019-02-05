@@ -22,12 +22,13 @@
  * this file should only be called while the boot loader is running.
  */
 
+#include "utils.h"
 #include <assert.h>
-#include <stddef.h>
-#include <stdbool.h>
-#include <inttypes.h>
-#include <stdlib.h>
-#include <string.h>
+//#include <stddef.h>
+//#include <stdbool.h>
+//#include <inttypes.h>
+//#include <stdlib.h>
+//#include <string.h>
 #include <os/os_malloc.h>
 #include "bootutil/bootutil.h"
 #include "bootutil/image.h"
@@ -1645,6 +1646,7 @@ boot_swap_if_needed(int *out_swap_type)
 int
 boot_go(struct boot_rsp *rsp)
 {
+
     int swap_type;
     size_t slot;
     int rc;
@@ -1691,7 +1693,7 @@ boot_go(struct boot_rsp *rsp)
     if (rc != 0) {
         goto out;
     }
-
+#ifndef MCU_BOOT_NO_SWAP
     /* If the image slots aren't compatible, no swap is possible.  Just boot
      * into the primary slot.
      */
@@ -1770,7 +1772,7 @@ boot_go(struct boot_rsp *rsp)
          */
         slot = BOOT_PRIMARY_SLOT;
     }
-
+#endif //MCU_BOOT_NO_SWAP
 #ifdef MCUBOOT_VALIDATE_PRIMARY_SLOT
     rc = boot_validate_slot(BOOT_PRIMARY_SLOT, NULL);
     if (rc != 0) {

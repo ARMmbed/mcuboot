@@ -30,6 +30,9 @@
 #define __BOOTUTIL_CRYPTO_H_
 
 #include "mcuboot_config/mcuboot_config.h"
+#ifdef MCUBOOT_USE_TLS_PORT
+#include "tls/tls_port.h"
+#endif
 
 #if (defined(MCUBOOT_USE_MBED_TLS) && defined(MCUBOOT_USE_TINYCRYPT))\
     ||(defined MCUBOOT_USE_MBED_TLS) && defined(MCUBOOT_USE_CC310)\
@@ -37,7 +40,7 @@
     #error "Cannot define CC310, MBED_TLS and TINYCRYPT"
 #endif
 
-#if !defined(MCUBOOT_USE_MBED_TLS) && !defined(MCUBOOT_USE_TINYCRYPT) && !defined(MCUBOOT_USE_CC310)
+#if !defined(MCUBOOT_USE_MBED_TLS) && !defined(MCUBOOT_USE_TINYCRYPT) && !defined(MCUBOOT_USE_CC310) && !defined(MCUBOOT_USE_TLS_PORT)
     #error "One of CC310, MBED_TLS or TINYCRYPT must be defined"
 #endif
 
@@ -53,7 +56,7 @@
     #include <cc310_glue.h>
 #endif /* MCUBOOT_USE_CC310 */
 
-#include <stdint.h>
+//#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

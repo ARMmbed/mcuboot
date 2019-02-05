@@ -17,10 +17,12 @@
  * under the License.
  */
 
+#include "utils.h"
 #include <assert.h>
-#include <stddef.h>
-#include <inttypes.h>
-#include <string.h>
+#include <os/os_malloc.h>
+//#include <stddef.h>
+//#include <inttypes.h>
+//#include <string.h>
 
 #include <flash_map_backend/flash_map_backend.h>
 
@@ -39,7 +41,7 @@
 #if defined(MCUBOOT_SIGN_EC) || defined(MCUBOOT_SIGN_EC256)
 #include "mbedtls/ecdsa.h"
 #endif
-#include "mbedtls/asn1.h"
+//#include "mbedtls/asn1.h"
 
 #include "bootutil_priv.h"
 
