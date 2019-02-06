@@ -119,9 +119,15 @@ class BasedIntParamType(click.ParamType):
         except ValueError:
             self.fail('%s is not a valid integer' % value, param, ctx)
 
-
+#TODO add Hash to trail from extranl file
 @click.argument('outfile')
 @click.argument('infile')
+@click.option('-P', '--extfile', metavar='filename',
+              help='Add hash of extrnal file to trail')
+@click.option('-l', '--hashtrail', type=click.Choice(['True', 'False']),
+              default='False', help="Sign trail instead of image, ignore max sectors (default: false)")
+@click.option('-K', '--key2', metavar='filename',
+              help='Second Key file for siging the first key (public) inside the trailer')
 @click.option('-E', '--encrypt', metavar='filename',
               help='Encrypt image using the provided public key')
 @click.option('-e', '--endian', type=click.Choice(['little', 'big']),
@@ -146,20 +152,22 @@ class BasedIntParamType(click.ParamType):
                INFILE and OUTFILE are parsed as Intel HEX if the params have
                .hex extension, othewise binary format is used''')
 def sign(key, align, version, header_size, pad_header, slot_size, pad,
-         max_sectors, overwrite_only, endian, encrypt, infile, outfile):
+         max_sectors, overwrite_only, endian, encrypt, key2, hashtrail, extfile, infile, outfile):
     img = image.Image(version=decode_version(version), header_size=header_size,
                       pad_header=pad_header, pad=pad, align=int(align),
                       slot_size=slot_size, max_sectors=max_sectors,
-                      overwrite_only=overwrite_only, endian=endian)
+                      overwrite_only=overwrite_only, endian=endian,
+                      hashtrail=hashtrail)
     img.load(infile)
     key = load_key(key) if key else None
+    key2 = load_key(key2) if key2 else None
     enckey = load_key(encrypt) if encrypt else None
     if enckey:
         if not isinstance(enckey, (keys.RSA2048, keys.RSA2048Public)):
             raise Exception("Encryption only available with RSA")
         if key and not isinstance(key, (keys.RSA2048, keys.RSA2048Public)):
             raise Exception("Encryption with sign only available with RSA")
-    img.create(key, enckey)
+    img.create(key, enckey, key2, extfile)
     img.save(outfile)
 
 
