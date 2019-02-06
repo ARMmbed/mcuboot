@@ -48,6 +48,18 @@ TLV_VALUES = {
         'ECDSA256': 0x22,
         'ENCRSA2048': 0x30,
         'ENCKW128': 0x31,
+        'RSA2048_TRAIL': 0x40,
+        'ECDSA224_TRAIL': 0x41,
+        'ECDSA256_TRAIL': 0x42,
+        'ENCRSA2048_TRAIL': 0x50,
+        'ENCKW128_TRAIL': 0x51,
+        'RSA2048_PUBKEY': 0x60,
+        'ECDSA224_PUBKEY': 0x61,
+        'ECDSA256_PUBKEY': 0x62,
+        'ENCRSA2048_PUBKEY': 0x70,
+        'ENCKW128_PUBKEY': 0x71,
+        'PUBLICKEY': 0x80,
+        'EXTFILE_HASH' : 0x81,
 }
 
 TLV_INFO_SIZE = 4
@@ -81,13 +93,22 @@ class TLV():
         header = struct.pack(e + 'HH', TLV_INFO_MAGIC, TLV_INFO_SIZE + len(self.buf))
         return header + bytes(self.buf)
 
+    def get_with_sign(self,key):
+
+        sha = hashlib.sha256()
+        sha.update(self.buf)
+        trail_hash = sha.digest()
+        sig = key.sign(bytes(trail_hash))
+        self.add(key.sig_tlv() + "_TRAIL", sig)
+        return self.get()
+
 
 class Image():
 
     def __init__(self, version=None, header_size=IMAGE_HEADER_SIZE,
                  pad_header=False, pad=False, align=1, slot_size=0,
                  max_sectors=DEFAULT_MAX_SECTORS, overwrite_only=False,
-                 endian="little"):
+                 endian="little",hashtrail=False):
         self.version = version or versmod.decode_version("0")
         self.header_size = header_size
         self.pad_header = pad_header
@@ -97,6 +118,7 @@ class Image():
         self.max_sectors = max_sectors
         self.overwrite_only = overwrite_only
         self.endian = endian
+        self.hashtrail = hashtrail
         self.base_addr = None
         self.payload = []
 
@@ -112,6 +134,7 @@ class Image():
                     self.max_sectors,
                     self.overwrite_only,
                     self.endian,
+                    self.hashtrail,
                     self.__class__.__name__,
                     len(self.payload))
 
@@ -159,7 +182,9 @@ class Image():
         if self.header_size > 0:
             if any(v != 0 for v in self.payload[0:self.header_size]):
                 raise Exception("Padding requested, but image does not start with zeros")
-        if self.slot_size > 0:
+
+        if self.pad == False and self.slot_size > 0:
+        # no padding is neccesry
             tsize = self._trailer_size(self.align, self.max_sectors,
                                        self.overwrite_only)
             padding = self.slot_size - (len(self.payload) + tsize)
@@ -168,10 +193,19 @@ class Image():
                         len(self.payload), tsize, self.slot_size)
                 raise Exception(msg)
 
-    def create(self, key, enckey):
+    def create(self, key, enckey, key2, extFile):
         self.add_header(enckey)
 
         tlv = TLV(self.endian)
+
+        if key2 is not None and key is not None:
+            pub = key.get_public_bytes()
+            tlv.add('PUBLICKEY', pub)
+            sha = hashlib.sha256()
+            sha.update(pub)
+            pubbytes = sha.digest()
+            sig2 = key2.sign(bytes(pubbytes))
+            tlv.add(key2.sig_tlv() + "_PUBKEY", sig2)
 
         # Note that ecdsa wants to do the hashing itself, which means
         # we get to hash it twice.
@@ -181,15 +215,6 @@ class Image():
 
         tlv.add('SHA256', digest)
 
-        if key is not None:
-            pub = key.get_public_bytes()
-            sha = hashlib.sha256()
-            sha.update(pub)
-            pubbytes = sha.digest()
-            tlv.add('KEYHASH', pubbytes)
-
-            sig = key.sign(bytes(self.payload))
-            tlv.add(key.sig_tlv(), sig)
 
         if enckey is not None:
             plainkey = os.urandom(16)
@@ -208,7 +233,33 @@ class Image():
             self.payload[self.header_size:] = encryptor.update(img) + \
                                               encryptor.finalize()
 
-        self.payload += tlv.get()
+
+        if extFile is not None:
+            f = open(extFile, 'rb')
+            sha = hashlib.sha256()
+            sha.update(f.read())
+            digest = sha.digest()
+            tlv.add('EXTFILE_HASH', digest)
+
+        ########## must be LAST TLV Value#############
+        if self.hashtrail == False:
+            if key is not None:
+                pub = key.get_public_bytes()
+                sha = hashlib.sha256()
+                sha.update(pub)
+                pubbytes = sha.digest()
+                tlv.add('KEYHASH', pubbytes)
+
+                sig = key.sign(bytes(self.payload))
+                tlv.add(key.sig_tlv(), sig)
+
+            self.payload += tlv.get()
+
+        else:
+
+
+            self.payload += tlv.get_with_sign(key)
+
 
     def add_header(self, enckey):
         """Install the image header."""
