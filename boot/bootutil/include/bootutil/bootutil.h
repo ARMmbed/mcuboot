@@ -20,7 +20,7 @@
 #ifndef H_BOOTUTIL_
 #define H_BOOTUTIL_
 
-//#include <inttypes.h>
+#include <inttypes.h>
 
 #ifdef __cplusplus
 extern "C" {

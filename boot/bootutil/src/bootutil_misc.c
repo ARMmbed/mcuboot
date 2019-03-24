@@ -17,11 +17,10 @@
  * under the License.
  */
 
-#include "utils.h"
-//#include <assert.h>
-//#include <string.h>
-//#include <inttypes.h>
-//#include <stddef.h>
+#include <assert.h>
+#include <string.h>
+#include <inttypes.h>
+#include <stddef.h>
 
 #include "sysflash/sysflash.h"
 #include "flash_map_backend/flash_map_backend.h"
@@ -33,8 +32,6 @@
 #ifdef MCUBOOT_ENC_IMAGES
 #include "bootutil/enc_key.h"
 #endif
-
-#include <os/os_malloc.h>
 
 MCUBOOT_LOG_MODULE_DECLARE(mcuboot);
 

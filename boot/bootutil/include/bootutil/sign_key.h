@@ -20,7 +20,7 @@
 #ifndef __BOOTUTIL_SIGN_KEY_H_
 #define __BOOTUTIL_SIGN_KEY_H_
 
-//#include <stdint.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -30,9 +30,6 @@
 #define __BOOTUTIL_CRYPTO_H_
 
 #include "mcuboot_config/mcuboot_config.h"
-#ifdef MCUBOOT_USE_TLS_PORT
-#include "tls/tls_port.h"
-#endif
 
 #if (defined(MCUBOOT_USE_MBED_TLS) && defined(MCUBOOT_USE_TINYCRYPT))\
     ||(defined MCUBOOT_USE_MBED_TLS) && defined(MCUBOOT_USE_CC310)\
@@ -56,7 +53,6 @@
     #include <cc310_glue.h>
 #endif /* MCUBOOT_USE_CC310 */
 
-//#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

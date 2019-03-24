@@ -20,7 +20,7 @@
 #ifndef H_IMAGE_
 #define H_IMAGE_
 
-//#include <inttypes.h>
+#include <inttypes.h>
 
 #ifdef __ZEPHYR__
 #include <toolchain/gcc.h>
